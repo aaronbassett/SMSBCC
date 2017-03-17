@@ -2,20 +2,42 @@
 
 import express from 'express'
 import Nexmo from 'nexmo'
+import _ from 'lodash'
 
-import { isProd, WEB_PORT, FROM, TO, API_KEY, API_SECRET } from '../shared/config'
+import { isProd, WEB_PORT, API_KEY, API_SECRET } from '../shared/config'
+import { searchNumber, buyNumber, updateNumber, sendMessage } from './promises'
 
 const app = express()
 
+
 app.get('/', (req, res) => {
   if (req.query.text) {
+    const msg: string = _.trim(req.query.text)
     const client = new Nexmo({
       apiKey: API_KEY,
       apiSecret: API_SECRET,
     })
-    client.message.sendSms(FROM, TO, req.query.text)
+
+    if (_.startsWith(_.toUpper(msg), 'NEW')) {
+      // We need a new virtual number
+      const countryCode: string = msg.split(' ')[1]
+
+      searchNumber(client, _.toUpper(countryCode)).then((number) => {
+        buyNumber(client, number).then((number) => {
+          updateNumber(client, number).then((number) => {
+            sendMessage(client, `Your new ${number.country} virtual number is ${number.msisdn}`)
+          }, (error) => {
+            sendMessage(client, error.message)
+          })
+        }, (error) => {
+          sendMessage(client, error.message)
+        })
+      })
+    } else {
+      sendMessage(client, msg)
+    }
   }
-  res.send()  // respond to Nexmo with a 200 OK
+  res.send()  // Always return a 200 OK for Nexmo
 })
 
 app.listen(WEB_PORT, () => {
