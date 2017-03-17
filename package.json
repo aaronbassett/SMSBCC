@@ -1,6 +1,6 @@
 {
   "name": "SMSBCC",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SMS Blind Carbon Copy is an SMS forwarder",
   "repository": "git@github.com:aaronbassett/SMSBCC.git",
   "author": "Aaron Bassett <me@aaronbassett.com>",
